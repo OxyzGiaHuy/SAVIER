@@ -166,6 +166,40 @@ lower confusable rate (CCR 13.7 vs 16.8). On SDXL the Refiner's edits cost VCFS 
 repairs move the image away from the reference-conditioned layout without the evaluator crediting the change.
 These are the honest numbers for one seed; none of the SAVIER-vs-refs-only differences is significant at 95%.
 
+### What the numbers say (insights, 50 prompts × 2 generators, one seed)
+
+1. **Reference photos carry the cultural-attribute gain; the agents decide *when* to intervene.** Over I0, refs-only
+   gains +16.7 VCFS on SDXL and +6.2 on FLUX; SAVIER gains +12.3 and +6.9. Split by how much I0 was missing
+   (|D0| = number of required contract items absent from I0, judged by the evaluator):
+
+   | generator | I0 complete (|D0|=0) | |D0|=1 | |D0|=2 | |D0|≥3 |
+   |---|---:|---:|---:|---:|
+   | SDXL · SAVIER − refs-only (VCFS) | −2.1 (n=12) | +1.6 (n=15) | −4.4 (n=15) | −19.0 (n=8) |
+   | FLUX · SAVIER − refs-only (VCFS) | −6.9 (n=10) | −2.6 (n=21) | **+7.8** (n=12) | **+9.5** (n=7) |
+
+   On FLUX the Refiner pays off exactly where I0 is badly wrong (≥2 missing items) and costs a little where I0 was
+   already complete — the profile of a repair step that should be gated by its own gap size. On SDXL the picture
+   inverts: the more items are missing, the more the IP-Adapter alone helps and the more textual additions dilute it.
+   SDXL follows the image condition, not appended sentences; FLUX (T5 encoder, 512 tokens) reads them.
+2. **The agents protect the prompt while the reference pulls the image toward the photo.** For prompts whose I0 had
+   VQAScore < 0.5, FLUX refs-only stays at 0.37 while SAVIER recovers to 0.53 (n=13); overall FLUX VQAScore
+   0.696 → 0.767 for SAVIER vs 0.713 for refs-only. This is the Preservation Card + P0-verbatim design doing its job.
+3. **Confusables are removed by evidence, not by photos alone.** Among FLUX prompts with a confusable in I0 (n=16),
+   mean CCR goes 47 → 38 with refs-only and → 32 with SAVIER; SAVIER clears all confusables in 4 prompts, refs-only
+   in 2. On SDXL the two are tied (38 vs 32, 4 vs 5).
+4. **Fewer regressions.** Prompts whose I1 lost VCFS relative to I0: SDXL 7 (SAVIER) vs 7 (refs-only), FLUX 10 vs 8;
+   but severe regressions (NRG < 0) are rarer with SAVIER: 2 vs 3 (SDXL), 5 vs 8 (FLUX).
+5. **Single-seed noise is large.** In a controlled follow-up (`ctig` branch, "v2"), a rule-based filter on the
+   Refiner output changed the P1 text of 39/50 units per generator; the resulting VCFS moved by a mean |Δ| of 33
+   points on the 12 SDXL prompts and 26 points on the 14 FLUX prompts whose score changed at all, in both directions,
+   with the mean unchanged (67.9 → 67.7 SDXL, 66.0 → 66.9 FLUX). Any prompt edit under a fixed seed + IP-Adapter
+   re-rolls roughly one contract item per prompt. Differences below ~5 VCFS on 50 prompts are not resolvable with one
+   seed; the FLUX-side VQA and CCR effects above are the most consistent signals we have.
+
+All agent I/O behind these numbers (system prompt, user prompt, attached images, raw JSON reply, latency — 1,132 calls
+on SDXL and 1,333 on FLUX) is in `results/transcripts/<model>/<pid>.json`, with a compact per-prompt pipeline view
+(P0 → Preservation Card → Evidence Card → Observer report → gap → actions → P1) in `results/transcripts/<model>/_summary.json`.
+
 ## Repository layout
 
 ```
@@ -185,6 +219,11 @@ data/
   contracts_v2.json        frozen visual contracts (evaluation only)
   culture_trip/            Culture-TRIP refined prompts (P_ct) for the 50 prompts
   wiki_curated/            curated Wikipedia extracts used by the Curator
+results/
+  sdxl/<pid>/, flux/<pid>/   A.png · I0.png · I1.png (SAVIER) · refs_only.png · keep_only.png — 50 prompts × 2 generators
+  grids/                     five 10-prompt × 8-column contact sheets (S001–S010 … S041–S050)
+  metrics/                   evaluator output per arm (metrics.json/.md, raw_evaluator.json) + ablation_50.md
+  transcripts/<model>/       full agent I/O per prompt (<pid>.json), _summary.json (pipeline view), _transcript.md
 ```
 
 ## Running
