@@ -115,23 +115,27 @@ Independent evaluator Qwen2.5-VL-7B (blind to arm and order); contract `contract
 generation; 95% bootstrap CIs by prompt (2000 resamples). Full tables and every raw evaluator answer are in
 `results/metrics_50/`.
 
-| generator | arm | VQAScore¹ ↑ | VCFS ↑ | CCR ↓ | NRG ↑ |
-|---|---|---:|---:|---:|---:|
-| SDXL 1.0 | A · prompt only | 0.720 | 52.9 | 20.8 | – |
-| SDXL 1.0 | I0 · Culture-TRIP | 0.610 | 55.6 | 15.3 | – |
-| SDXL 1.0 | **I1 · SAVIER** | **0.740** | **68.9** | 16.2 | **41.2** [26.8, 55.4] |
-| SDXL 1.0 | Δ (I1 − I0) | **+0.12** [+0.01, +0.25] | **+13.3** [+5.4, +21.4] | +0.8 [−4.5, +5.8] | |
-| FLUX.1-dev | A · prompt only | 0.670 | 44.8 | 13.3 | – |
-| FLUX.1-dev | I0 · Culture-TRIP | 0.700 | 59.1 | 15.0 | – |
-| FLUX.1-dev | **I1 · SAVIER** | **0.770** | **66.3** | **13.0** | **21.1** [5.5, 36.2] |
-| FLUX.1-dev | Δ (I1 − I0) | +0.07 [−0.01, +0.16] | **+7.3** [+0.4, +13.7] | −2.0 [−7.7, +3.7] | |
+| generator | arm | CAIRE-VN² ↑ | CAIRE-CN² ↓ | VQAScore¹ ↑ | VCFS ↑ | CCR ↓ | NRG ↑ |
+|---|---|---:|---:|---:|---:|---:|---:|
+| SDXL 1.0 | A · prompt only | 2.66 | 2.46 | 0.720 | 52.9 | 20.8 | – |
+| SDXL 1.0 | I0 · refined prompt | 3.00 | 2.54 | 0.610 | 55.6 | 15.3 | – |
+| SDXL 1.0 | **I1 · SAVIER (ours)** | **3.44** | **2.38** | **0.740** | **68.9** | 16.2 | **41.2** [26.8, 55.4] |
+| SDXL 1.0 | Δ (I1 − I0) | +0.44 [−0.02, +0.90] | −0.16 [−0.54, +0.22] | **+0.12** [+0.01, +0.25] | **+13.3** [+5.4, +21.4] | +0.8 [−4.5, +5.8] | |
+| FLUX.1-dev | A · prompt only | 2.50 | 2.54 | 0.670 | 44.8 | 13.3 | – |
+| FLUX.1-dev | I0 · refined prompt | 2.50 | 3.08 | 0.700 | 59.1 | 15.0 | – |
+| FLUX.1-dev | **I1 · SAVIER (ours)** | **2.92** | **2.88** | **0.770** | **66.3** | **13.0** | **21.1** [5.5, 36.2] |
+| FLUX.1-dev | Δ (I1 − I0) | **+0.42** [+0.06, +0.78] | −0.20 [−0.56, +0.16] | +0.07 [−0.01, +0.16] | **+7.3** [+0.4, +13.7] | −2.0 [−7.7, +3.7] | |
 
 Paired outcome of I1 vs I0 (NRG): SDXL 24 > 0 · 13 = 0 · **1 < 0** · 12 N/A (I0 already complete);
 FLUX 19 > 0 · 16 = 0 · **5 < 0** · 10 N/A. No-op rate (Refiner found nothing to repair): SDXL 2/50, FLUX 5/50.
 
 ¹ VQAScore here uses a Qwen2.5-VL-7B backbone (same question and P(Yes) formula as the paper, different
 model); it is comparable across arms in this table, not with numbers published for `clip-flant5-xxl`.
-CAIRE (Vietnam / China relevance, 1–5) and human pairwise preference are reported separately when available.
+² CAIRE (Yayavaram et al., EACL 2026) run with the authors' code, knowledge base and Qwen2.5-VL-7B scorer on the
+same 300 blinded images; culture labels `Vietnam, China, Japan, South Korea, Thailand, India, France, United States`;
+VN = relevance to Vietnam, CN = relevance to China (1–5). Paired ΔVN: SDXL 17 > 0 / 25 = 0 / 8 < 0; FLUX 16 / 27 / 7.
+CAIRE measures cultural *relevance*, not entity correctness (a Vietnamese street scene with the wrong object still
+scores high) — read it together with VCFS. Human pairwise preference is reported separately when available.
 
 ## Repository layout
 
